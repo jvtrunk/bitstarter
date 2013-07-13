@@ -73,6 +73,7 @@ var checkUrlFile = function(url_file, checks_file) {
             fs.writeFileSync(url_file, result);
     	    var checkJson = checkHtmlFile(url_file, checks_file);
     	    var outJson = JSON.stringify(checkJson, null, 4);
+            console.log(outJson);
         }
     };
     return resp2req;
@@ -86,17 +87,17 @@ if(require.main == module) {
         .option('-u, --url <html_file>', 'URL to index.html', clone(assertFileExists), URLFILE_DEFAULT)
 */
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists))
-        .option('-u, --url <html_file>', 'URL to index.html', clone(assertFileExists))
+        .option('-u, --url <url_file>', 'URL to index.html')
         .parse(process.argv);
     if(program.file) {
     	var checkJson = checkHtmlFile(program.file, program.checks);
     	var outJson = JSON.stringify(checkJson, null, 4);
+        console.log(outJson);
     }
     if(program.url) {
 	var resp2req = checkUrlFile(URLFILE, program.checks);
 	rest.get(program.url).on('complete',resp2req);
     }
-    console.log(outJson);
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
