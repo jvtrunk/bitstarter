@@ -22,9 +22,12 @@ References:
 */
 
 var fs = require('fs');
+var rest = require('restler');
 var program = require('commander');
 var cheerio = require('cheerio');
+var URLFILE = "url.html";
 var HTMLFILE_DEFAULT = "index.html";
+var URLFILE_DEFAULT = "http://aqueous-reef-2649.herokuapp.com"
 var CHECKSFILE_DEFAULT = "checks.json";
 
 var assertFileExists = function(infile) {
@@ -61,14 +64,38 @@ var clone = function(fn) {
     return fn.bind({});
 };
 
+var checkUrlFile = function(url_file, checks_file) {
+    var resp2req = function(result, response) {
+        if (result instanceof Error) {
+            console.error('Error: ' + util.format(response.message));
+        } else {
+            console.error("Wrote %s", url_file);
+            fs.writeFileSync(url_file, result);
+    	    var checkJson = checkHtmlFile(url_file, checks_file);
+    	    var outJson = JSON.stringify(checkJson, null, 4);
+        }
+    };
+    return resp2req;
+};
+
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
+/*
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-        .option('-u, --url <html_file>', 'URL to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-u, --url <html_file>', 'URL to index.html', clone(assertFileExists), URLFILE_DEFAULT)
+*/
+        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists))
+        .option('-u, --url <html_file>', 'URL to index.html', clone(assertFileExists))
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
+    if(program.file) {
+    	var checkJson = checkHtmlFile(program.file, program.checks);
+    	var outJson = JSON.stringify(checkJson, null, 4);
+    }
+    if(program.url) {
+	var resp2req = checkUrlFile(URLFILE, program.checks);
+	rest.get(program.url).on('complete',resp2req);
+    }
     console.log(outJson);
 } else {
     exports.checkHtmlFile = checkHtmlFile;
